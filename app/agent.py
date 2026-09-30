@@ -26,7 +26,7 @@ class AgentResult:
 class LabAgent:
     def __init__(self, model: str = "claude-sonnet-4-5") -> None:
         self.model = model
-        self.llm = FakeLLM(model=model)
+        self.llm = FakeLLM(model=model, langfuse_client=get_langfuse_client())
 
     @observe(name="lab-agent-run", as_type="agent", capture_input=False, capture_output=False)
     def run(
@@ -71,8 +71,6 @@ class LabAgent:
                 },
                 version=prompt.version,
             )
-            # TODO (CP2): instrument retrieve() and FakeLLM.generate() as child
-            # observations. The nested generation must receive prompt, usage and cost.
             with propagate_attributes(prompt=prompt.managed_prompt):
                 response = self.llm.generate(prompt.text)
             quality_score = self._heuristic_quality(message, response.text, docs)
